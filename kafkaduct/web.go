@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/Financial-Times/service-status-go/gtg"
@@ -69,7 +68,7 @@ func registerAPI(router *mux.Router, appConfig *AppConfig) {
 
 			if err1 != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(w, "Failed to store your data:, %s", err1)
+				log.Log("FATAL", "Failed to Marshal", err1)
 			}
 
 			partition, offset, err := kafkaClient.SendMessage(&sarama.ProducerMessage{
@@ -79,11 +78,11 @@ func registerAPI(router *mux.Router, appConfig *AppConfig) {
 
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(w, "Failed to store your data:, %s", err)
+				log.Log("FATAL", "Failed to store your data", err)
 			} else {
 				// The tuple (topic, partition, offset) can be used as a unique identifier
 				// for a message in a Kafka cluster.
-				fmt.Fprintf(w, "Your data is stored with unique identifier important/%d/%d", partition, offset)
+				log.Log(w, "Your data is stored with unique identifier important", partition, offset)
 			}
 		}
 	})
