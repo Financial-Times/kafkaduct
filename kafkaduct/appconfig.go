@@ -25,11 +25,6 @@ type AppConfig struct {
 		Port   string `env:"PORT,required"`
 		ApiKey string `env:"API_KEY,required"`
 	}
-
-	Bridge struct {
-		Url    string `env:"KAFKA_HTTPBRIDGE_URL,required"`
-		ApiKey string `env:"KAFKA_HTTPBRIDGE_API_KEY,required"`
-	}
 }
 
 func InitAppConfig() *AppConfig {
