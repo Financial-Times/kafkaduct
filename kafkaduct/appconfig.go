@@ -41,8 +41,6 @@ func (ac *AppConfig) createKafkaProducer(appConfig *AppConfig, brokers []string,
 	config.Producer.Return.Errors = true
 	config.ClientID = strings.Join([]string{ConsumerIdBase, appConfig.Env, appConfig.Dyno}, "-")
 
-	log.Log("clientID", config.ClientID)
-
 	err := config.Validate()
 	if err != nil {
 		panic(err)

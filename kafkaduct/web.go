@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -22,7 +23,7 @@ func StartServer(appConfig *AppConfig) {
 
 	root.NewRoute().Headers("X-Api-Key", "").HandlerFunc(error(403, "Missing or Invalid Api Key")) // invalid api-key
 
-	registerApi(protected, appConfig)
+	registerAPI(protected, appConfig)
 
 	protected.NewRoute().HandlerFunc(http.NotFound) // valid api-key, but invalid URL
 
@@ -31,28 +32,59 @@ func StartServer(appConfig *AppConfig) {
 	log.Log("FATAL", http.ListenAndServe(":"+appConfig.Web.Port, root))
 }
 
-func registerApi(router *mux.Router, appConfig *AppConfig) {
+type message struct {
+	Body               string `json:"body"`
+	ContentType        string `json:"contentType"`
+	MessageID          string `json:"messageId"`
+	MessageTimestamp   string `json:"messageTimestamp"`
+	MessageType        string `json:"messageType"`
+	OriginHost         string `json:"originHost"`
+	OriginHostLocation string `json:"originHostLocation"`
+	OriginSystemID     string `json:"originSystemId"`
+}
+
+type messageRequest struct {
+	Messages []message `json:"messages"`
+	Topic    string    `json:"topic"`
+}
+
+func registerAPI(router *mux.Router, appConfig *AppConfig) {
 
 	kafkaClient := newKafkaClient(appConfig)
 
-	router.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/write", func(w http.ResponseWriter, r *http.Request) {
+
+		res := messageRequest{}
 
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r.Body)
-		s := buf.String()
 
-		partition, offset, err := kafkaClient.SendMessage(&sarama.ProducerMessage{
-			Topic: "test-write",
-			Value: sarama.StringEncoder(s),
-		})
+		json.Unmarshal(buf.Bytes(), &res)
 
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "Failed to store your data:, %s", err)
-		} else {
-			// The tuple (topic, partition, offset) can be used as a unique identifier
-			// for a message in a Kafka cluster.
-			fmt.Fprintf(w, "Your data is stored with unique identifier important/%d/%d", partition, offset)
+		log.Log("DEBUG", "Request", res)
+
+		for _, element := range res.Messages {
+
+			data, err1 := json.Marshal(element)
+
+			if err1 != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, "Failed to store your data:, %s", err1)
+			}
+
+			partition, offset, err := kafkaClient.SendMessage(&sarama.ProducerMessage{
+				Topic: res.Topic,
+				Value: sarama.StringEncoder(data),
+			})
+
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, "Failed to store your data:, %s", err)
+			} else {
+				// The tuple (topic, partition, offset) can be used as a unique identifier
+				// for a message in a Kafka cluster.
+				fmt.Fprintf(w, "Your data is stored with unique identifier important/%d/%d", partition, offset)
+			}
 		}
 	})
 }
