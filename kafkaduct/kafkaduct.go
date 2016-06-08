@@ -25,9 +25,6 @@ func Run() {
 
 	appconfig := InitAppConfig()
 
-	// client := newKafkaClient(appconfig)
-	// defer client.producer.Close()
-
 	log.Log("Message", "Created client")
 
 	StartServer(appconfig)
