@@ -26,7 +26,7 @@ func StartServer(appConfig *AppConfig) {
 
 	http.Handle("/", root)
 
-	log.Log("FATAL", http.ListenAndServe(appConfig.Web.Port, protected))
+	log.Log("FATAL", http.ListenAndServe(appConfig.Web.Port, root))
 }
 
 func registerApi(router *mux.Router) {

@@ -11,7 +11,7 @@
 
 Do a test request
 ```
-curl -X POST -H "Content-Type: application/json" -d '{
+curl -X POST -H "Content-Type: application/json" -H "X-Api-Key: <API_KEY>" -d '{
     "foo": "bar"
 }
 ' "http://localhost:8080/events"
