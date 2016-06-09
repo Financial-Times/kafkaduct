@@ -23,7 +23,7 @@ type AppConfig struct {
 
 	Web struct {
 		Port   string `env:"PORT,required"`
-		ApiKey string `env:"API_KEY,required"`
+		APIKey string `env:"API_KEY,required"`
 	}
 }
 
@@ -31,10 +31,6 @@ func InitAppConfig() *AppConfig {
 	appconfig := AppConfig{}
 	envdecode.MustDecode(&appconfig)
 	return &appconfig
-}
-
-type KafkaClient struct {
-	producer sarama.SyncProducer
 }
 
 func newKafkaClient(appConfig *AppConfig) sarama.SyncProducer {

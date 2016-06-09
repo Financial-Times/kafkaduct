@@ -18,7 +18,7 @@ func StartServer(appConfig *AppConfig) {
 	root.HandleFunc(httphandlers.BuildInfoPath, httphandlers.BuildInfoHandler)
 	root.HandleFunc(httphandlers.BuildInfoPathDW, httphandlers.BuildInfoHandler)
 
-	protected := root.NewRoute().Headers("X-Api-Key", appConfig.Web.ApiKey).Subrouter()
+	protected := root.NewRoute().Headers("X-Api-Key", appConfig.Web.APIKey).Subrouter()
 
 	root.NewRoute().Headers("X-Api-Key", "").HandlerFunc(error(403, "Missing or Invalid Api Key")) // invalid api-key
 
@@ -31,6 +31,50 @@ func StartServer(appConfig *AppConfig) {
 	logger.Printf("starting server on %s", appConfig.Web.Port)
 
 	logger.Fatalf("%s", http.ListenAndServe(":"+appConfig.Web.Port, root))
+}
+
+func registerAPI(router *mux.Router, appConfig *AppConfig) {
+
+	var service service
+	service.kafkaClient = newKafkaClient(appConfig)
+
+	router.HandleFunc("/write", service.handle)
+}
+
+type service struct {
+	kafkaClient sarama.SyncProducer
+}
+
+func (s *service) handle(w http.ResponseWriter, r *http.Request) {
+
+	res := messageRequest{}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(r.Body)
+
+	json.Unmarshal(buf.Bytes(), &res)
+
+	for _, element := range res.Messages {
+
+		data, err1 := json.Marshal(element)
+
+		if err1 != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			logger.Printf("ERROR Failed to Marshal: %s", err1)
+		}
+
+		partition, offset, err := s.kafkaClient.SendMessage(&sarama.ProducerMessage{
+			Topic: res.Topic,
+			Value: sarama.StringEncoder(data),
+		})
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			logger.Printf("ERROR Failed to store your data error=%s", err)
+		} else {
+			logger.Printf("Stored with partition=%d offset=%d", partition, offset)
+		}
+	}
 }
 
 type message struct {
@@ -47,43 +91,6 @@ type message struct {
 type messageRequest struct {
 	Messages []message `json:"messages"`
 	Topic    string    `json:"topic"`
-}
-
-func registerAPI(router *mux.Router, appConfig *AppConfig) {
-
-	kafkaClient := newKafkaClient(appConfig)
-
-	router.HandleFunc("/write", func(w http.ResponseWriter, r *http.Request) {
-
-		res := messageRequest{}
-
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(r.Body)
-
-		json.Unmarshal(buf.Bytes(), &res)
-
-		for _, element := range res.Messages {
-
-			data, err1 := json.Marshal(element)
-
-			if err1 != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				logger.Printf("ERROR Failed to Marshal: %s", err1)
-			}
-
-			partition, offset, err := kafkaClient.SendMessage(&sarama.ProducerMessage{
-				Topic: res.Topic,
-				Value: sarama.StringEncoder(data),
-			})
-
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				logger.Printf("ERROR Failed to store your data error=%s", err)
-			} else {
-				logger.Printf("Stored with partition=%d offset=%d", partition, offset)
-			}
-		}
-	})
 }
 
 func goodToGo() gtg.Status {
