@@ -28,3 +28,10 @@ curl -X POST -H "Content-Type: application/json" -H "X-Api-Key: <API_KEY>" -d '{
 ' "https://<host:port>/write"
 
 ```
+
+## Before commit
+
+1. `godep save`
+2. `godep save ./...`
+
+This will refresh the `Godeps.json` file, removing unused dependencies.

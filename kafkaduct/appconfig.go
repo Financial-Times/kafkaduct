@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"log"
 	"net/url"
 	"strings"
 
@@ -16,9 +17,9 @@ type AppConfig struct {
 
 	Kafka struct {
 		Url           string `env:"KAFKA_URL,required"`
-		TrustedCert   string `env:"KAFKA_TRUSTED_CERT"`
-		ClientCertKey string `env:"KAFKA_CLIENT_CERT_KEY"`
-		ClientCert    string `env:"KAFKA_CLIENT_CERT"`
+		TrustedCert   string `env:"KAFKA_TRUSTED_CERT,required"`
+		ClientCertKey string `env:"KAFKA_CLIENT_CERT_KEY,required"`
+		ClientCert    string `env:"KAFKA_CLIENT_CERT,required"`
 	}
 
 	Web struct {
@@ -33,27 +34,30 @@ func InitAppConfig() *AppConfig {
 	return &appconfig
 }
 
-func (ac *AppConfig) createKafkaProducer(appConfig *AppConfig, brokers []string, tc *tls.Config) sarama.SyncProducer {
+type KafkaClient struct {
+	producer sarama.SyncProducer
+}
+
+func newKafkaClient(appConfig *AppConfig) sarama.SyncProducer {
 	config := sarama.NewConfig()
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Retry.Max = 10
+	tlsConfig := appConfig.createTLSConfig()
 
-	config.Net.TLS.Config = tc
-	config.Net.TLS.Enable = tc != nil
-	config.Producer.Return.Errors = true
-	config.ClientID = strings.Join([]string{ConsumerIdBase, appConfig.Env, appConfig.Dyno}, "-")
-
-	err := config.Validate()
-	if err != nil {
-		panic(err)
+	if tlsConfig != nil {
+		config.Net.TLS.Config = tlsConfig
+		config.Net.TLS.Enable = true
 	}
-	producer, err := sarama.NewSyncProducer(brokers, config)
+
+	producer, err := sarama.NewSyncProducer(appConfig.brokerAddresses(), config)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to start Sarama producer error=%s", err)
 	}
 
 	return producer
 }
 
-func (ac *AppConfig) createTlsConfig() *tls.Config {
+func (ac *AppConfig) createTLSConfig() *tls.Config {
 	cert, err := tls.X509KeyPair([]byte(ac.Kafka.ClientCert), []byte(ac.Kafka.ClientCertKey))
 	if err != nil {
 		panic(err)
@@ -79,7 +83,7 @@ func (ac *AppConfig) brokerAddresses() []string {
 			panic(err)
 		}
 		addrs[i] = u.Host
-		log.Log("broker", u.Host)
+		log.Printf("broker=%s", u.Host)
 	}
 	return addrs
 }

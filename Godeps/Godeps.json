@@ -38,21 +38,6 @@
 			"Rev": "ded5959c0d4e360646dc9e9908cff48666781367"
 		},
 		{
-			"ImportPath": "github.com/go-kit/kit/log",
-			"Comment": "v0.1.0-2-ge4115e0",
-			"Rev": "e4115e066d8411a6f1128caa2d77f0103307c1bf"
-		},
-		{
-			"ImportPath": "github.com/go-logfmt/logfmt",
-			"Comment": "v0.2.0-9-gd432719",
-			"Rev": "d4327190ff838312623b09bfeb50d7c93c8d9c1d"
-		},
-		{
-			"ImportPath": "github.com/go-stack/stack",
-			"Comment": "v1.5.2",
-			"Rev": "100eb0c0a9c5b306ca2fb4f165df21d80ada4b82"
-		},
-		{
 			"ImportPath": "github.com/golang/snappy",
 			"Rev": "d9eb7a3d35ec988b8585d4a0068e462c27d28380"
 		},
@@ -78,10 +63,6 @@
 			"ImportPath": "github.com/klauspost/crc32",
 			"Comment": "v1.0",
 			"Rev": "19b0b332c9e4516a6370a0456e6182c3b5036720"
-		},
-		{
-			"ImportPath": "github.com/kr/logfmt",
-			"Rev": "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
 		}
 	]
 }
