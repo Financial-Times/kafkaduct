@@ -45,14 +45,20 @@ type service struct {
 	kafkaClient sarama.SyncProducer
 }
 
-func (s *service) handle(w http.ResponseWriter, r *http.Request) {
-
+func unmarshal(r *http.Request) messageRequest {
 	res := messageRequest{}
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(r.Body)
 
 	json.Unmarshal(buf.Bytes(), &res)
+
+	return res
+}
+
+func (s *service) handle(w http.ResponseWriter, r *http.Request) {
+
+	res := unmarshal(r)
 
 	for _, element := range res.Messages {
 
