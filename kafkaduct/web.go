@@ -68,7 +68,7 @@ func registerAPI(router *mux.Router, appConfig *AppConfig) {
 
 			if err1 != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				logger.Fatalf("Failed to Marshal: %s", err1)
+				logger.Println("ERROR Failed to Marshal: %s", err1)
 			}
 
 			partition, offset, err := kafkaClient.SendMessage(&sarama.ProducerMessage{
@@ -78,9 +78,9 @@ func registerAPI(router *mux.Router, appConfig *AppConfig) {
 
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				logger.Fatalf("Failed to store your data error=%s", err)
+				logger.Println("ERROR Failed to store your data error=%s", err)
 			} else {
-				logger.Printf("Stored with partition=%d offset=%d", partition, offset)
+				logger.Println("Stored with partition=%d offset=%d", partition, offset)
 			}
 		}
 	})
