@@ -3,6 +3,7 @@
 #app
 export PORT=8080
 export DYNO=me
+export API_KEY=someKey
 
 #kafka
 export KAFKA_CLIENT_CERT=empty
