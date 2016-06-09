@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/Financial-Times/service-status-go/gtg"
@@ -28,7 +29,7 @@ func StartServer(appConfig *AppConfig) {
 
 	http.Handle("/", root)
 
-	logger.Printf("starting server on %s", appConfig.Web.Port)
+	fmt.Printf("starting server on %s", appConfig.Web.Port)
 
 	logger.Fatalf("%s", http.ListenAndServe(":"+appConfig.Web.Port, root))
 }
@@ -66,7 +67,7 @@ func (s *service) handle(w http.ResponseWriter, r *http.Request) {
 
 		if err1 != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			logger.Printf("ERROR Failed to Marshal: %s", err1)
+			fmt.Printf("ERROR Failed to Marshal: %s", err1)
 		}
 
 		partition, offset, err := s.kafkaClient.SendMessage(&sarama.ProducerMessage{
@@ -76,9 +77,9 @@ func (s *service) handle(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			logger.Printf("ERROR Failed to store your data error=%s", err)
+			fmt.Printf("ERROR Failed to store your data error=%s", err)
 		} else {
-			logger.Printf("Stored with partition=%d offset=%d", partition, offset)
+			fmt.Printf("Stored with partition=%d offset=%d", partition, offset)
 		}
 	}
 }
