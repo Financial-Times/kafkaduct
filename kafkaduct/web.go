@@ -9,8 +9,6 @@ import (
 	"github.com/Financial-Times/service-status-go/httphandlers"
 	"github.com/Shopify/sarama"
 	"github.com/gorilla/mux"
-
-	"log"
 )
 
 func StartServer(appConfig *AppConfig) {
@@ -30,9 +28,9 @@ func StartServer(appConfig *AppConfig) {
 
 	http.Handle("/", root)
 
-	log.Printf("starting server on %s", appConfig.Web.Port)
+	logger.Printf("starting server on %s", appConfig.Web.Port)
 
-	log.Fatalf("%s", http.ListenAndServe(":"+appConfig.Web.Port, root))
+	logger.Fatalf("%s", http.ListenAndServe(":"+appConfig.Web.Port, root))
 }
 
 type message struct {
@@ -70,7 +68,7 @@ func registerAPI(router *mux.Router, appConfig *AppConfig) {
 
 			if err1 != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				log.Fatalf("Failed to Marshal: %s", err1)
+				logger.Fatalf("Failed to Marshal: %s", err1)
 			}
 
 			partition, offset, err := kafkaClient.SendMessage(&sarama.ProducerMessage{
@@ -80,9 +78,9 @@ func registerAPI(router *mux.Router, appConfig *AppConfig) {
 
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				log.Fatalf("Failed to store your data error=%s", err)
+				logger.Fatalf("Failed to store your data error=%s", err)
 			} else {
-				log.Printf("Stored with partition=%d offset=%d", partition, offset)
+				logger.Printf("Stored with partition=%d offset=%d", partition, offset)
 			}
 		}
 	})

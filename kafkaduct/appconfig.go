@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"log"
 	"net/url"
 	"strings"
 
@@ -54,7 +53,7 @@ func newKafkaClient(appConfig *AppConfig) sarama.SyncProducer {
 
 	producer, err := sarama.NewSyncProducer(appConfig.brokerAddresses(), config)
 	if err != nil {
-		log.Fatalf("Failed to start Sarama producer error=%s", err)
+		logger.Fatalf("Failed to start Sarama producer error=%s", err)
 	}
 
 	return producer
@@ -86,7 +85,7 @@ func (ac *AppConfig) brokerAddresses() []string {
 			panic(err)
 		}
 		addrs[i] = u.Host
-		log.Printf("broker=%s", u.Host)
+		logger.Printf("broker=%s", u.Host)
 	}
 	return addrs
 }
