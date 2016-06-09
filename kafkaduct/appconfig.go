@@ -16,7 +16,7 @@ type AppConfig struct {
 	Dyno string `env:"DYNO,required"`
 
 	Kafka struct {
-		Url           string `env:"KAFKA_URL,required"`
+		URL           string `env:"KAFKA_URL,required"`
 		TrustedCert   string `env:"KAFKA_TRUSTED_CERT,required"`
 		ClientCertKey string `env:"KAFKA_CLIENT_CERT_KEY,required"`
 		ClientCert    string `env:"KAFKA_CLIENT_CERT,required"`
@@ -42,11 +42,14 @@ func newKafkaClient(appConfig *AppConfig) sarama.SyncProducer {
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
 	config.Producer.Retry.Max = 10
-	tlsConfig := appConfig.createTLSConfig()
 
-	if tlsConfig != nil {
-		config.Net.TLS.Config = tlsConfig
-		config.Net.TLS.Enable = true
+	if appConfig.Env != "localhost" {
+		tlsConfig := appConfig.createTLSConfig()
+
+		if tlsConfig != nil {
+			config.Net.TLS.Config = tlsConfig
+			config.Net.TLS.Enable = true
+		}
 	}
 
 	producer, err := sarama.NewSyncProducer(appConfig.brokerAddresses(), config)
@@ -75,7 +78,7 @@ func (ac *AppConfig) createTLSConfig() *tls.Config {
 }
 
 func (ac *AppConfig) brokerAddresses() []string {
-	urls := strings.Split(ac.Kafka.Url, ",")
+	urls := strings.Split(ac.Kafka.URL, ",")
 	addrs := make([]string, len(urls))
 	for i, v := range urls {
 		u, err := url.Parse(v)

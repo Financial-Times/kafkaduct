@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#app
+export PORT=8080
+export DYNO=me
+
+#kafka
+export KAFKA_CLIENT_CERT=empty
+export KAFKA_TRUSTED_CERT=empty
+export KAFKA_CLIENT_CERT_KEY=empty
+export KAFKA_URL=http://localhost:9092

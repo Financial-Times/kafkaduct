@@ -1,12 +1,10 @@
 # kafkaduct
 
-TODO: TLS setup
 
-1. `export DYNO="1"`
-2. `export KAFKA_URL="<heroku_kafka_url>"`
-3. `export PORT="8080"`
-4. `export API_KEY="<someKey>"`
-5. `go build && go install . && ./kafkaduct`
+1. `. sourceme`
+2. `cd kafkaduct`
+3. `go build && go install . && ./kafkaduct`
+
 
 Do a test request
 ```
