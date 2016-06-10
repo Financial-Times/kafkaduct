@@ -1,10 +1,16 @@
 # kafkaduct
 
+## Checkout
+
+Clone under your `GOPATH` e.g. as `$GOPATH/src/github.com/Financial-Times/kafkaduct`
+
+## Building and Running locally
+
+You will need kafka running locally:
 
 1. `. sourceme`
 2. `cd kafkaduct`
 3. `go build && go install . && ./kafkaduct`
-
 
 Do a test request
 ```
