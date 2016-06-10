@@ -1,20 +1,35 @@
 # kafkaduct
 
+Sends [`kafka-httpbridge`](http://git.svc.ft.com:8080/projects/MXT/repos/kafka-http-bridge/browse)-style `POST` messages to a kafka log.
+
 ## Checkout
 
-Clone under your `GOPATH` e.g. as `$GOPATH/src/github.com/Financial-Times/kafkaduct`
+Clone under your `GOPATH` as `$GOPATH/src/github.com/Financial-Times/kafkaduct`:
+
+    $ git clone git@github.com:Financial-Times/kafkaduct.git
+
+## Fetch dependencies
+
+If you don't already have it installed, install [`godep`](https://github.com/tools/godep):
+
+    $ go get github.com/tools/godep
+
+Then, from `kafkaduct` repo directory:
+
+    $ godep get
 
 ## Building and Running locally
 
-You will need kafka running locally:
+> You will also need kafka running locally, e.g. using the `do env` script from  [`om-apps-environments`](http://git.svc.ft.com:8080/projects/OM/repos/om-apps-environments/browse).
 
-1. `. sourceme`
-2. `cd kafkaduct`
-3. `go build && go install . && ./kafkaduct`
 
-Do a test request
+    $ . sourceme     # sets dummy env-vars
+    $ cd kafkaduct
+    $ go build && ./kafkaduct
+
+Do a test request:
 ```
-curl -X POST -H "Content-Type: application/json" -H "X-Api-Key: <API_KEY>" -d '{
+curl -X POST -H "Content-Type: application/json" -H "X-Api-Key: someKey" -d '{
     "messages": [
         {
             "body": "Pong",
@@ -29,7 +44,7 @@ curl -X POST -H "Content-Type: application/json" -H "X-Api-Key: <API_KEY>" -d '{
     ],
     "topic": "membership_users_v1"
 }
-' "https://<host:port>/write"
+' "https://localhost:8080/write"
 
 ```
 
