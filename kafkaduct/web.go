@@ -98,25 +98,28 @@ func (s *service) handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Printf("Messages %s %d", res.Topic, len(res.Messages))
+	logger.Printf("Messages topic=%s count=%d", res.Topic, len(res.Messages))
 
 	for _, element := range res.Messages {
+
+		logger.Printf("Processing %s %s", element.MessageType, element.MessageID)
 
 		data, err1 := json.Marshal(element)
 
 		if err1 != nil {
-			w.WriteHeader(http.StatusInternalServerError)
 			logger.Printf("ERROR Failed to Marshal: %s", err1)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
-		partition, offset, err := s.kafkaClient.SendMessage(&sarama.ProducerMessage{
+		partition, offset, err2 := s.kafkaClient.SendMessage(&sarama.ProducerMessage{
 			Topic: res.Topic,
 			Value: sarama.StringEncoder(data),
 		})
 
-		if err != nil {
+		if err2 != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			logger.Printf("ERROR Failed to store your data error=%s", err)
+			logger.Printf("ERROR Failed to store your data error=%s", err2)
 		} else {
 			logger.Printf("Stored %s with partition=%d offset=%d", element.MessageType, partition, offset)
 		}
