@@ -121,7 +121,7 @@ func (s *service) handle(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			logger.Printf("ERROR Failed to store your data error=%s", err2)
 		} else {
-			logger.Printf("Stored %s with partition=%d offset=%d", element.MessageType, partition, offset)
+			logger.Printf("Stored %s %s with partition=%d offset=%d", element.MessageType, element.MessageId, partition, offset)
 		}
 	}
 }
