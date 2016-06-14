@@ -10,9 +10,12 @@ const (
 	ConsumerGroup  = "kafkaduct"
 )
 
-var logger = log.New(os.Stdout, "", 0)
+const logPattern = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile | log.LUTC
+
+var logger = log.New(os.Stdout, "", logPattern)
 
 func main() {
+
 	appconfig := InitAppConfig()
 
 	StartServer(appconfig)
