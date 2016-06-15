@@ -51,13 +51,11 @@ type service struct {
 	kafkaClient sarama.SyncProducer
 }
 
-func unmarshal(r *http.Request) (messageRequest, error) {
-	res := messageRequest{}
+func unmarshal(r *http.Request) (res messageRequest, err error) {
 
 	defer r.Body.Close()
 
 	var jsonBody []byte
-	var err error
 
 	if(strings.Contains(r.Header.Get("Content-Encoding"),"gzip")) {
 		var gz *gzip.Reader
@@ -65,6 +63,7 @@ func unmarshal(r *http.Request) (messageRequest, error) {
 
 		if err == nil {
 			defer gz.Close()
+
 			jsonBody, err = ioutil.ReadAll(gz)
 		}
 
@@ -72,56 +71,54 @@ func unmarshal(r *http.Request) (messageRequest, error) {
 		jsonBody, err = ioutil.ReadAll(r.Body)
 	}
 
-	if err != nil {
-		panic(err)
+	if err == nil {
+		err = json.Unmarshal(jsonBody, &res)
 	}
-
-	// Spew(jsonBody)
-
-	err = json.Unmarshal(jsonBody, &res)
 
 	return res, err
 }
 
 func (s *service) handle(w http.ResponseWriter, r *http.Request) {
 
-	logger.Printf("Handling write %s %s", r.Host, r.UserAgent())
+	requestId := r.Header.Get("X-Request-Id")
+
+	logger.Printf("%s Handling write %s %s", requestId, r.Host, r.UserAgent())
 
 	res, err := unmarshal(r)
 
 	// Spew(res)
-
-
 	if err != nil  {
-		logger.Printf("Error unmarshalling: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		logger.Printf("%s ERROR unmarshalling: %s", requestId, err)
+		http.Error(w, err.Error(), http.StatusBadRequest )
 		return
 	}
 
-	logger.Printf("Messages topic=%s count=%d", res.Topic, len(res.Messages))
+	logger.Printf("%s Messages topic=%s count=%d", requestId, res.Topic, len(res.Messages))
 
 	for _, element := range res.Messages {
 
-		logger.Printf("Processing %s %s", element.MessageType, element.MessageID)
+		logger.Printf("%s Processing %s %s", requestId, element.MessageType, element.MessageID)
 
-		data, err1 := json.Marshal(element)
+		data, err := json.Marshal(element)
 
-		if err1 != nil {
-			logger.Printf("ERROR Failed to Marshal: %s", err1)
-			w.WriteHeader(http.StatusInternalServerError)
+		if err != nil {
+			logger.Printf("%s ERROR Failed to Marshal: %s", requestId, err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		partition, offset, err2 := s.kafkaClient.SendMessage(&sarama.ProducerMessage{
+		partition, offset, err := s.kafkaClient.SendMessage(&sarama.ProducerMessage{
 			Topic: res.Topic,
 			Value: sarama.StringEncoder(data),
 		})
 
-		if err2 != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			logger.Printf("ERROR Failed to store your data error=%s", err2)
+		if err != nil {
+			logger.Printf("%s ERROR Failed to send message error=%s", requestId, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+
 		} else {
-			logger.Printf("Stored %s %s with partition=%d offset=%d", element.MessageType, element.MessageID, partition, offset)
+			logger.Printf("%s Sent %s %s with partition=%d offset=%d", requestId, element.MessageType, element.MessageID, partition, offset)
 		}
 	}
 }
