@@ -14,7 +14,7 @@ If you don't already have it installed, install [`godep`](https://github.com/too
 
     $ go get github.com/tools/godep
 
-Then, from `kafkaduct` repo directory:
+Then, from `kafkaduct/kafkaduct` directory:
 
     $ godep get
 
